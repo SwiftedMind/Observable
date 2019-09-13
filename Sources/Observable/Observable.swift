@@ -1,15 +1,15 @@
 import Foundation
 import Combine
 
-protocol ModelObserver {
+public protocol ModelObserver {
     var disposeBag: Set<AnyCancellable> { get set }
 }
 
-class Observable<Value> {
+public final class Observable<Value> {
     public var publisher: CurrentValueSubject<Value, Never>
     private var value: Value
     
-    init(value: Value) {
+    public init(value: Value) {
         self.value = value
         self.publisher = CurrentValueSubject(value)
     }
@@ -26,10 +26,10 @@ class Observable<Value> {
 /// You can still subscribe to the given observable as if this was a `Observable` class and you will get the same behavior.
 /// However, this relay allows for the the observable to be swapped and for that to be detectable by any subscriber.
 /// This class is meant to be used within a struct that's referencing another `Observable`.
-class ObservableRelay<Value>: ModelObserver {
+public final class ObservableRelay<Value>: ModelObserver {
     
     /// The set containing the subscriber so that is stays attached as long as this object exists.
-    var disposeBag: Set<AnyCancellable> = Set()
+    public var disposeBag: Set<AnyCancellable> = Set()
     
     /// The observer you can subscribe to in order to observe changes to the value.
     /// This is an alias for the internally used `relayObserver`, it is meant to to be used exactly like you would use an `Observable`.
@@ -48,7 +48,7 @@ class ObservableRelay<Value>: ModelObserver {
     /// It is kept private to hide it from the outside as the relay observer handles any subscriptions and publications from the observable's publisher.
     private var observable: Observable<Value>
     
-    init(observable: Observable<Value>) {
+    public init(observable: Observable<Value>) {
         self.observable = observable
         self.relayPublisher = CurrentValueSubject<Value, Never>(observable.publisher.value)
         subscribe()
