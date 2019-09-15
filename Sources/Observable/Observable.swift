@@ -16,18 +16,13 @@ public final class Observable<Value> {
     public var publisher: CurrentValueSubject<Value, Never>
     
     /// The value that should be observed.
-    private var value: Value
+    public var value: Value {
+        didSet { publisher.send(value) }
+    }
     
     public init(value: Value) {
         self.value = value
         self.publisher = CurrentValueSubject(value)
-    }
-    
-    /// Update the observed value. This will trigger the publisher to send that new value to all its subscribers.
-    /// - Parameter value: The new value
-    public func update(valueTo newValue: Value) {
-        self.value = newValue
-        publisher.send(newValue)
     }
     
 }
@@ -53,6 +48,11 @@ public final class ObservableRelay<Value>: ModelObserver {
         set { relayPublisher = newValue }
     }
     
+    public var value: Value {
+        get { observable.value }
+        set { observable.value = newValue }
+    }
+    
     /// The observer that will take the place of the given observable's publisher, acting exactly the same to the public (see `self.observable`).
     ///
     /// Instead of subscribing to the observable's publisher directly, you implicitly subscribe to this relay.
@@ -65,7 +65,7 @@ public final class ObservableRelay<Value>: ModelObserver {
     
     public init(observable: Observable<Value>) {
         self.observable = observable
-        self.relayPublisher = CurrentValueSubject<Value, Never>(observable.publisher.value)
+        self.relayPublisher = CurrentValueSubject<Value, Never>(observable.value)
         subscribe()
     }
     
@@ -76,13 +76,6 @@ public final class ObservableRelay<Value>: ModelObserver {
         observable.publisher.sink { (value) in
             self.relayPublisher.send(value)
         }.store(in: &disposeBag)
-    }
-    
-    /// Update the observed value of the given `observable` property. This will trigger the publisher (and therefore the relay publisher) to send that new value to all its subscribers.
-    /// - Parameter newValue: The new value
-    public func update(valueTo newValue: Value) {
-        // Re-route the update to the observer
-        observable.update(valueTo: newValue)
     }
     
     public func update(observableTo newObservable: Observable<Value>) {
