@@ -35,7 +35,7 @@ final class ObservableTests: XCTestCase {
         
         // Now change the person
         person.name = "changed"
-        personObservable.value = person
+        personObservable.update(to: person)
         
         XCTAssertTrue(observedPersonName == "changed", "The person's changed name is not correct.")
     }
@@ -64,18 +64,21 @@ final class ObservableTests: XCTestCase {
         XCTAssertEqual(observedIdCardName, "First Card")
         
         // Change the id card's name
-        firstCardObservable.value.name = "changed"
+        var firstCardCopy = firstCardObservable.publisher.value
+        firstCardCopy.name = "changed"
+        firstCardObservable.update(to: firstCardCopy)
         
         XCTAssertEqual(observedIdCardName, "changed")
         
         // Now replace the id card with the second card
         person.idCardRelay.update(observableTo: secondCardObservable)
-        personObservable.value = person
+        personObservable.update(to: person)
         
         XCTAssertEqual(observedIdCardName, "Second Card")
     }
 
     static var allTests = [
         ("testObservable", testObservable),
+        ("testObservableRelay", testObservableRelay)
     ]
 }

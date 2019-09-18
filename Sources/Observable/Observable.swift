@@ -16,13 +16,16 @@ public final class Observable<Value> {
     public var publisher: CurrentValueSubject<Value, Never>
     
     /// The value that should be observed.
-    public var value: Value {
-        didSet { publisher.send(value) }
-    }
+    private var value: Value
     
     public init(value: Value) {
         self.value = value
         self.publisher = CurrentValueSubject(value)
+    }
+    
+    public func update(to newValue: Value) {
+        self.value = newValue
+        publisher.send(value)
     }
     
 }
@@ -48,11 +51,6 @@ public final class ObservableRelay<Value>: ModelObserver {
         set { relayPublisher = newValue }
     }
     
-    public var value: Value {
-        get { observable.value }
-        set { observable.value = newValue }
-    }
-    
     /// The observer that will take the place of the given observable's publisher, acting exactly the same to the public (see `self.observable`).
     ///
     /// Instead of subscribing to the observable's publisher directly, you implicitly subscribe to this relay.
@@ -65,7 +63,7 @@ public final class ObservableRelay<Value>: ModelObserver {
     
     public init(observable: Observable<Value>) {
         self.observable = observable
-        self.relayPublisher = CurrentValueSubject<Value, Never>(observable.value)
+        self.relayPublisher = CurrentValueSubject<Value, Never>(observable.publisher.value)
         subscribe()
     }
     
@@ -76,6 +74,10 @@ public final class ObservableRelay<Value>: ModelObserver {
         observable.publisher.sink { (value) in
             self.relayPublisher.send(value)
         }.store(in: &disposeBag)
+    }
+    
+    public func update(to newValue: Value) {
+        self.observable.update(to: newValue)
     }
     
     public func update(observableTo newObservable: Observable<Value>) {
